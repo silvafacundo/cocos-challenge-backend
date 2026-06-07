@@ -333,6 +333,7 @@ export default class UserController extends BaseController {
 
 		if (initBalance) {
 			orders.push({
+				userid: user.id,
 				side: 'CASH_IN',
 				type: 'MARKET',
 				size: initBalance,
