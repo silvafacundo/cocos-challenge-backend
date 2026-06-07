@@ -1,0 +1,15 @@
+services:
+
+ db:
+    image: postgres:17.4
+    restart: always
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      - "6432:5432"
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=db
+volumes:
+  pg_data:
