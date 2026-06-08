@@ -47,6 +47,8 @@ export default class InstrumentController extends BaseController {
 		{ type, ticker, name }: { type?: string[]; ticker?: string; name?: string } = {}
 	) {
 		// Improvements: Pagination (?)
+
+		// Filter instruments
 		const conditions: Parameters<typeof and> = [];
 		if (query) {
 			conditions.push(
@@ -54,10 +56,12 @@ export default class InstrumentController extends BaseController {
 			);
 		}
 
+		// Filter by exact ticker
 		if (ticker) {
 			conditions.push(ilike(schema.instruments.ticker, ticker));
 		}
 
+		// Filter by exact name
 		if (name) {
 			conditions.push(ilike(schema.instruments.name, name));
 		}

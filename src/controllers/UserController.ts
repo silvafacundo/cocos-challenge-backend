@@ -53,12 +53,12 @@ export default class UserController extends BaseController {
 			.where(
 				and(
 					or(
-						// Balance decrease
+						// Decrease balance
 						and(
 							inArray(schema.orders.side, ['BUY', 'CASH_OUT']),
 							inArray(schema.orders.status, ['FILLED', 'NEW'])
 						),
-						// Balance increase
+						// Increase balance
 						and(inArray(schema.orders.side, ['SELL', 'CASH_IN']), eq(schema.orders.status, 'FILLED'))
 					),
 					eq(schema.orders.userid, userId)
@@ -191,6 +191,7 @@ export default class UserController extends BaseController {
 			if (!marketdata) throw new PublicError('Instrument not found');
 			if (!marketdata.close) throw new PublicError('Invalid instrument');
 
+			// Calculate the operation size
 			if (typeof size === 'undefined' && typeof cashValue === 'undefined') {
 				throw new PublicError('for MARKET operations "size" or "cashValue" are required');
 			} else if (typeof size === 'undefined' && typeof cashValue === 'number') {
@@ -211,6 +212,8 @@ export default class UserController extends BaseController {
 			price = marketdata.close;
 		} else {
 			// type === LIMIT
+
+			// Validate required paramters
 			if (typeof bidPrice !== 'number') throw new PublicError('"bidPrice" is required for LIMIT operations');
 			if (bidPrice <= 0) throw new PublicError('"bidPrice" should be greater than 0');
 
@@ -290,6 +293,7 @@ export default class UserController extends BaseController {
 		const [order] = await this.db.select().from(schema.orders).where(eq(schema.orders.id, orderId)).limit(1);
 		if (!order) throw new PublicError('order not found');
 
+		// Validate that the order is from the user
 		if (order.userid !== userId) throw new PublicError('order not found');
 
 		if (order.status !== 'NEW') throw new PublicError('Only "NEW" orders can be cancelled');
@@ -304,6 +308,10 @@ export default class UserController extends BaseController {
 
 		return updatedOrder;
 	}
+
+	/**
+	 * Testing methods
+	 */
 
 	public async createTestUser(initBalance?: number, shares?: { instrumentId: number; size: number }[]) {
 		const [user] = await this.db

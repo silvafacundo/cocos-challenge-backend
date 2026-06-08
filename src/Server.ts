@@ -45,6 +45,8 @@ export default class Server {
 		this.app = express();
 		app.use(express.json());
 
+		// Register routes
+
 		app.get('/', (_req, res) => {
 			res.json({
 				status: 'ok'
