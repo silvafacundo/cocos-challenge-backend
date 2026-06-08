@@ -1,10 +1,86 @@
 # Cocos Challenge Backend
 
+## Índice
+- [1. Configuración e Inicio del Proyecto](#1-configuración-e-inicio-del-proyecto)
+  - [Opción A: Sin Docker (Local)](#opción-a-sin-docker-local)
+  - [Opción B: Con Docker](#opción-b-con-docker)
+- [2. Ejecución de Unit Tests](#2-ejecución-de-unit-tests)
+  - [Opción A: Sin Docker (Local)](#opción-a-sin-docker-local-1)
+  - [Opción B: Con Docker](#opción-b-con-docker-1)
+- [3. Decisiones de Diseño y Arquitectura](#3-decisiones-de-diseño-y-arquitectura)
+  - [Portfolio (GET /portfolio)](#portfolio)
+  - [Búsqueda de Instrumentos (GET /search)](#búsqueda-de-instrumentos)
+  - [Crear Orden (POST /order)](#crear-orden)
+  - [Cancelar Orden (DELETE /order/:orderId)](#cancelar-orden)
+- [Colección de Requests](#colección-de-peticiones)
 
 ---
-## Desiciones de diseño y arquitectura
+
+
+## 1. Configuración e Inicio del Proyecto
+
+### Opción A: Sin Docker (Local)
+Para levantar el proyecto en tu entorno local sin usar Docker:
+
+1. **Configurar la Base de Datos**:
+   Duplica el archivo `.env.example` como `.env` y actualiza la variable con los valores correspondientes.
+
+2. **Instalar dependencias**:
+   ```bash
+   npm install
+   ```
+
+3. **Correr migraciones y seed**:
+   ```bash
+   npm run migrate
+   npm run seed
+   ```
+
+4. **Correr en modo dev**:
+   ```bash
+   npm run dev
+   ```
+
+---
+
+### Opción B: Con Docker
+Para levantar el proyecto completo de forma automática con Docker Compose:
+
+1. **Iniciar todos los servicios**:
+   ```bash
+   docker compose up --build -d
+   ```
+   *Esto compilará la aplicación, creará e iniciará los contenedores de la base de datos y de la aplicación, ejecutará las migraciones y los datos de prueba de forma automática. La aplicación quedará disponible en http://localhost:3000.*
+
+---
+
+## 2. Ejecución de Unit Tests
+
+### Opción A: Sin Docker (Local)
+Para correr los tests en local:
+
+1. Asegúrate de tener configurada tu base de datos en el archivo `.env`.
+2. Ejecuta el comando de pruebas:
+   ```bash
+   npm test
+   ```
+
+---
+
+### Opción B: Con Docker
+Para correr las migraciones, la carga de datos de prueba y las pruebas de forma automática en un contenedor de pruebas aislado y limpio:
+
+1. Ejecuta el siguiente comando:
+   ```bash
+   docker compose -f docker-compose.test.yml up --build --abort-on-container-exit
+   ```
+
+---
+
+## 3. Decisiones de diseño y arquitectura
 En este desarrollo se tomaron libertades prácticas para cumplir los requisitos de este challenge.
-Si bien no hay un sistema de autenticación, se puede modificar el usuario al que se está haciendo referencia en cada request utilizanod el header `user-id` seguido del id del usuario. De no especificarse se utilizará el user id 1.
+También se asume que las entradas en las distintas tablas siempre tendrán la información necesaria y similar a los ejemplos proporcionados.
+Si bien no hay un sistema de autenticación, se puede modificar el usuario al que se está haciendo referencia en cada request utilizando el header `user-id` seguido del ID del usuario. De no especificarse se utilizará el user-id 1.
 
 ### Portfolio
 `GET /portfolio`
@@ -81,7 +157,7 @@ Permite registrar una nueva orden de compra o venta (de tipo MARKET o LIMIT) par
 | `bidPrice` | `number` | Condicional | Precio límite por cada unidad (requerido únicamente para órdenes `LIMIT`). |
 | `cashValue` | `number` | Condicional | Monto total en pesos a operar (opcional para `MARKET`). |
 
-> Si se utiliza `cashValue` la cantidad de acciones a comprar será aproximada. No se ejecutará el total de `cashValue`.
+> Si se utiliza `cashValue`, la cantidad de acciones a comprar será aproximada. No se ejecutará el total de `cashValue`.
 
 **Response (Objeto de orden creada):**
 
@@ -125,62 +201,5 @@ Permite cancelar una orden de tipo `LIMIT` que aún no se haya ejecutado (debe e
 
 ---
 
-
-
-## 1. Configuración e Inicio del Proyecto
-
-### Opción A: Sin Docker (Local)
-Para levantar el proyecto en tu entorno local sin usar Docker:
-
-1. **Configurar la Base de Datos**:
-   Duplica el archivo `.env.example` como `.env` y actualiza la variable con los valores correspondientes.
-
-2. **Instalar dependencias**:
-   ```bash
-   npm install
-   ```
-
-3. **Correr migraciones y seed**:
-   ```bash
-   npm run migrate
-   npm run seed
-   ```
-
-4. **Correr en modo dev**:
-   ```bash
-   npm run dev
-   ```
-
----
-
-### Opción B: Con Docker
-Para levantar el proyecto completo de forma automática con Docker Compose:
-
-1. **Iniciar todos los servicios**:
-   ```bash
-   docker compose up --build -d
-   ```
-   *Esto compilará la aplicación, creará e iniciará los contenedores de la base de datos y de la aplicación, ejecutará las migraciones y los datos de prueba de forma automática. La aplicación quedará disponible en http://localhost:3000.*
-
----
-
-## 2. Ejecución de Unit Tests
-
-### Opción A: Sin Docker (Local)
-Para correr los tests en local:
-
-1. Asegúrate de tener configurada tu base de datos en el archivo `.env`.
-2. Ejecuta el comando de pruebas:
-   ```bash
-   npm test
-   ```
-
----
-
-### Opción B: Con Docker
-Para correr las migraciones, la carga de datos de prueba y los test de forma automática en un contenedor de pruebas aislado y limpio:
-
-1. Ejecuta el siguiente comando:
-   ```bash
-   docker compose -f docker-compose.test.yml up --build --abort-on-container-exit
-   ```
+## Colección de Requests
+Se encuentra disponible la colección de requests HTTP lista para importar en **Insomnia** en el archivo `requests-collection.yaml` en la raíz del proyecto.
