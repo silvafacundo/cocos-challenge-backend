@@ -1,0 +1,148 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Cocos Challenge
+meta:
+  id: wrk_20f9138572464736a4c17fe2b0f9ce99
+  created: 1780676452341
+  modified: 1780676452341
+  description: ""
+collection:
+  - url: http://localhost:3000/portfolio
+    name: Portfolio
+    meta:
+      id: req_8f23319b303347ae89beb826f714b7bc
+      created: 1780676473133
+      modified: 1780885738612
+      isPrivate: false
+      description: ""
+      sortKey: -1780676494636
+    method: GET
+    headers:
+      - name: User-Agent
+        value: insomnia/12.6.0
+        description: ""
+        disabled: false
+      - name: user-id
+        value: "{{userId}}"
+        description: ""
+        disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:3000/search
+    name: Search
+    meta:
+      id: req_5ab9601f358f4a979f780c1eee1ea7a5
+      created: 1780676481054
+      modified: 1780850473702
+      isPrivate: false
+      description: ""
+      sortKey: -1780676494586
+    method: GET
+    parameters:
+      - name: query
+        value: ars
+        description: ""
+        disabled: true
+      - name: ticker
+        value: YPFD
+        description: ""
+        disabled: false
+      - name: name
+        value: Y.P.F. S.A.
+        description: ""
+        disabled: true
+      - name: type
+        value: ACCIONES
+        description: ""
+        disabled: true
+    headers:
+      - name: User-Agent
+        value: insomnia/12.6.0
+        description: ""
+        disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:3000/order
+    name: Place Order
+    meta:
+      id: req_a56134495a514f29b4922a06ec9f59de
+      created: 1780787997701
+      modified: 1780887285813
+      isPrivate: false
+      description: ""
+      sortKey: -1780676494486
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"type": "MARKET",
+        	"side": "BUY",
+        	"ticker": "YPFD",
+        	"cashValue": 16000
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: insomnia/12.6.0
+      - name: user-id
+        value: "{{userId}}"
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:3000/order/145
+    name: Cancel Order
+    meta:
+      id: req_dbe6457bc9a745fb9ffd8600abe6a881
+      created: 1780864091150
+      modified: 1780864104822
+      isPrivate: false
+      description: ""
+      sortKey: -1779895960637.5
+    method: DELETE
+    headers:
+      - name: User-Agent
+        value: insomnia/12.6.0
+      - name: user-id
+        value: "{{userId}}"
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_6b608bdc5c62054b1329211aea7eeec6fddec75f
+    created: 1780676452348
+    modified: 1780676452348
+environments:
+  name: Base Environment
+  meta:
+    id: env_6b608bdc5c62054b1329211aea7eeec6fddec75f
+    created: 1780676452346
+    modified: 1780887566289
+    isPrivate: false
+  data:
+    userId: "1"
