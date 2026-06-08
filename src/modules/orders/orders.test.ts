@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import Server from '../../structures/Server';
-import type UserService from '../../users/users.service';
+import type UserService from '../users/users.service';
 import { OrderSide, OrderType } from './types';
 
 describe('Orders', async () => {

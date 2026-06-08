@@ -20,12 +20,12 @@ import * as schema from '../db/schema';
 
 import { PublicError } from '../errors/PublicError';
 
-import InstrumentController from '../routes/instruments/instrument.controller';
-import InstrumentService from '../routes/instruments/instrument.service';
-import OrderController from '../routes/orders/orders.controller';
-import OrderService from '../routes/orders/orders.service';
-import UserController from '../routes/users/users.controller';
-import UserService from '../routes/users/users.service';
+import InstrumentController from '../modules/instruments/instrument.controller';
+import InstrumentService from '../modules/instruments/instrument.service';
+import OrderController from '../modules/orders/orders.controller';
+import OrderService from '../modules/orders/orders.service';
+import UserController from '../modules/users/users.controller';
+import UserService from '../modules/users/users.service';
 
 export type DbTransaction = Parameters<Parameters<ReturnType<typeof drizzle>['transaction']>[0]>[0];
 
