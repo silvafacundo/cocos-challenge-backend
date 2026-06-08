@@ -29,7 +29,7 @@ import UserService from '../modules/users/users.service';
 
 export type DbTransaction = Parameters<Parameters<ReturnType<typeof drizzle>['transaction']>[0]>[0];
 
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.PORT || '3000', 10);
 
 export default class Server {
 	private static instance: Server;
@@ -103,7 +103,7 @@ export default class Server {
 		const userCount = await this.db.$count(schema.users);
 		console.log(`🟢[database]: Database connected. ${userCount} users`);
 
-		await this.app.listen({ port: 3000 });
+		await this.app.listen({ port: PORT });
 		console.log(`⚡️[server]: Server is running at http://localhost:${PORT}`);
 	}
 
