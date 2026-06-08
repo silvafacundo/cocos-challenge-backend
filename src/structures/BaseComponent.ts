@@ -1,5 +1,5 @@
-import Server from '../Server';
-export default class BaseController {
+import Server from './Server';
+export default class BaseComponent {
 	protected readonly server: Server;
 
 	public constructor() {
@@ -12,5 +12,9 @@ export default class BaseController {
 
 	protected get controllers() {
 		return this.server.controllers;
+	}
+
+	protected get services() {
+		return this.server.services;
 	}
 }

@@ -121,7 +121,7 @@ Permite buscar instrumentos financieros según diferentes criterios de filtro.
 
 | Parámetro | Tipo | Requerido | Descripción |
 | :--- | :--- | :--- | :--- |
-| `query` | `string` | No | Filtro general que busca coincidencias parciales en `ticker` o `name`. |
+| `query` | `string` | Sí | Filtro general que busca coincidencias parciales en `ticker` o `name`. |
 | `type` | `string` | No | Filtra por el tipo de instrumento exacto. |
 | `ticker` | `string` | No | Filtra por el símbolo exacto del activo. |
 | `name` | `string` | No | Filtra por el nombre del instrumento. |

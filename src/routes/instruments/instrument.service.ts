@@ -1,9 +1,8 @@
 import { and, eq, ilike, inArray, max, or, sql } from 'drizzle-orm';
+import * as schema from '../../db/schema';
+import BaseComponent from '../../structures/BaseComponent';
 
-import * as schema from '../db/schema';
-import BaseController from './BaseController';
-
-export default class InstrumentController extends BaseController {
+export default class InstrumentService extends BaseComponent {
 	public latestMarketdataQuery(filterInstruments?: number[]) {
 		// Group latest row of each instrument
 		const groupedMarketQuery = this.db
