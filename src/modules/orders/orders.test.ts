@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import Server from '../../structures/Server';
 import type UserService from '../users/users.service';
 import { OrderSide, OrderType } from './types';
@@ -14,6 +14,13 @@ describe('Orders', async () => {
 	const ypfPrice = ypfInstrument.close!;
 
 	let testUser: Awaited<ReturnType<UserService['createTestUser']>>;
+
+	afterEach(async () => {
+		if (testUser) {
+			await userService.deleteUser(testUser.id);
+			testUser = undefined as any;
+		}
+	});
 
 	describe('Buy Operations (MARKET / LIMIT)', async () => {
 		it('should deduct the trade value from the balance for a MARKET type operation', async () => {
@@ -32,8 +39,6 @@ describe('Orders', async () => {
 			const userBalance = await userService.getUserCashBalance(testUser.id);
 
 			expect(userBalance).toBe(startingBalance - ypfPrice * 2);
-
-			await userService.deleteUser(testUser.id);
 		});
 		it('should deduct the trade value from the balance for a LIMIT type operation', async () => {
 			const bidPrice = 500;
@@ -49,8 +54,6 @@ describe('Orders', async () => {
 			const userBalance = await userService.getUserCashBalance(testUser.id);
 
 			expect(userBalance).toBe(startingBalance - bidPrice * 2);
-
-			await userService.deleteUser(testUser.id);
 		});
 	});
 
@@ -70,8 +73,6 @@ describe('Orders', async () => {
 
 			const userBalance = await userService.getUserCashBalance(testUser.id);
 			expect(userBalance).toBe(startingBalance);
-
-			await userService.deleteUser(testUser.id);
 		});
 
 		it('should reject a SELL order if the user has insufficient shares', async () => {
@@ -85,8 +86,6 @@ describe('Orders', async () => {
 				{ size: 1 }
 			);
 			expect(order.status).toBe('REJECTED');
-
-			await userService.deleteUser(testUser.id);
 		});
 	});
 
@@ -110,8 +109,6 @@ describe('Orders', async () => {
 			const ypfAsset = portfolio.assets.find(a => a.ticker === 'YPFD');
 			expect(ypfAsset).toBeDefined();
 			expect(ypfAsset!.size).toBe(3);
-
-			await userService.deleteUser(testUser.id);
 		});
 	});
 
@@ -135,8 +132,6 @@ describe('Orders', async () => {
 
 			userBalance = await userService.getUserCashBalance(testUser.id);
 			expect(userBalance).toBe(startingBalance);
-
-			await userService.deleteUser(testUser.id);
 		});
 	});
 
@@ -161,8 +156,6 @@ describe('Orders', async () => {
 			// After 1 filled order, balance should reflect the deduction
 			const userBalance = await userService.getUserCashBalance(testUser.id);
 			expect(userBalance).toBe(startingBalance - ypfPrice);
-
-			await userService.deleteUser(testUser.id);
 		});
 	});
 
@@ -207,8 +200,6 @@ describe('Orders', async () => {
 
 			const userBalance = await userService.getUserCashBalance(testUser.id);
 			expect(userBalance).toBe(startingBalance - ypfPrice * 2);
-
-			await userService.deleteUser(testUser.id);
 		});
 
 		it('should calculate the size and increase the balance for a MARKET SELL order using cashValue', async () => {
@@ -233,8 +224,6 @@ describe('Orders', async () => {
 			const ypfAsset = portfolio.assets.find(a => a.ticker === 'YPFD');
 			expect(ypfAsset).toBeDefined();
 			expect(ypfAsset!.size).toBe(3);
-
-			await userService.deleteUser(testUser.id);
 		});
 
 		it('should reject a MARKET BUY order using cashValue if the user has insufficient balance', async () => {
@@ -254,8 +243,6 @@ describe('Orders', async () => {
 
 			const userBalance = await userService.getUserCashBalance(testUser.id);
 			expect(userBalance).toBe(startingBalance);
-
-			await userService.deleteUser(testUser.id);
 		});
 
 		it('should throw an error if the cashValue is less than the price of a single share', async () => {
@@ -266,8 +253,6 @@ describe('Orders', async () => {
 			await expect(
 				orderService.placeOrder(testUser.id, ypfInstrument.id, OrderType.MARKET, OrderSide.BUY, { cashValue })
 			).rejects.toThrow('The desired "cashValue" is less than a share.');
-
-			await userService.deleteUser(testUser.id);
 		});
 
 		it('should throw an error if the cashValue is less than or equal to 0', async () => {
@@ -284,8 +269,6 @@ describe('Orders', async () => {
 					cashValue: -100
 				})
 			).rejects.toThrow('"cashValue" should be greater than 0');
-
-			await userService.deleteUser(testUser.id);
 		});
 	});
 
@@ -296,8 +279,6 @@ describe('Orders', async () => {
 			await expect(
 				orderService.placeOrder(testUser.id, ypfInstrument.id, OrderType.MARKET, OrderSide.BUY, {})
 			).rejects.toThrow('for MARKET operations "size" or "cashValue" are required');
-
-			await userService.deleteUser(testUser.id);
 		});
 
 		it('should throw an error for MARKET operation if size is <= 0', async () => {
@@ -310,8 +291,6 @@ describe('Orders', async () => {
 			await expect(
 				orderService.placeOrder(testUser.id, ypfInstrument.id, OrderType.MARKET, OrderSide.BUY, { size: -5 })
 			).rejects.toThrow('"size" should be greater than 0');
-
-			await userService.deleteUser(testUser.id);
 		});
 
 		it('should throw an error for LIMIT operation if bidPrice is missing', async () => {
@@ -320,8 +299,6 @@ describe('Orders', async () => {
 			await expect(
 				orderService.placeOrder(testUser.id, ypfInstrument.id, OrderType.LIMIT, OrderSide.BUY, { size: 2 })
 			).rejects.toThrow('"bidPrice" is required for LIMIT operations');
-
-			await userService.deleteUser(testUser.id);
 		});
 
 		it('should throw an error for LIMIT operation if bidPrice is <= 0', async () => {
@@ -340,8 +317,6 @@ describe('Orders', async () => {
 					bidPrice: -100
 				})
 			).rejects.toThrow('"bidPrice" should be greater than 0');
-
-			await userService.deleteUser(testUser.id);
 		});
 
 		it('should throw an error for LIMIT operation if size is missing', async () => {
@@ -352,8 +327,6 @@ describe('Orders', async () => {
 					bidPrice: 500
 				})
 			).rejects.toThrow('"size" is required for LIMIT operations');
-
-			await userService.deleteUser(testUser.id);
 		});
 
 		it('should throw an error for LIMIT operation if size is <= 0', async () => {
@@ -372,8 +345,6 @@ describe('Orders', async () => {
 					bidPrice: 500
 				})
 			).rejects.toThrow('"size" should be greater than 0');
-
-			await userService.deleteUser(testUser.id);
 		});
 	});
 });
