@@ -173,22 +173,6 @@ export default class UserController extends BaseController {
 		};
 	}
 
-	public async getUserLock(userId: number) {
-		let resolver: any;
-		const promise = new Promise<void>(res => {
-			resolver = res;
-		});
-
-		this.db.transaction(async trx => {
-			trx.select().from(schema.users).where(eq(schema.users.id, userId)).for('update');
-			await promise;
-		});
-
-		return {
-			release: () => resolver()
-		};
-	}
-
 	public async placeOrder(
 		userId: number,
 		instrumentId: number,
