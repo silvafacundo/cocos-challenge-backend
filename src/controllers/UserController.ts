@@ -1,6 +1,7 @@
 import { and, eq, inArray, notInArray, or, sql, sum } from 'drizzle-orm';
 import type { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from '../db/schema';
+import { PublicError } from '../errors/PublicError';
 import type { DbTransaction } from '../Server';
 import BaseController from './BaseController';
 
@@ -203,19 +204,19 @@ export default class UserController extends BaseController {
 			const [marketdata] = await this.db
 				.select()
 				.from(this.controllers.instruments.latestMarketdataQuery([instrumentId]));
-			if (!marketdata) throw new Error('Instrument not found');
-			if (!marketdata.close) throw new Error('Invalid instrument');
+			if (!marketdata) throw new PublicError('Instrument not found');
+			if (!marketdata.close) throw new PublicError('Invalid instrument');
 
 			if (typeof size === 'undefined' && typeof cashValue === 'undefined') {
-				throw new Error('for MARKET operations "size" or "cashValue" are required');
+				throw new PublicError('for MARKET operations "size" or "cashValue" are required');
 			} else if (typeof size === 'undefined' && typeof cashValue === 'number') {
 				// If cashValue is provided then we calculate the amount of shares by dividing by the current price
-				if (cashValue <= 0) throw new Error('"cashValue" should be grater than 0');
+				if (cashValue <= 0) throw new PublicError('"cashValue" should be greater than 0');
 
 				// Calculate operation size by the cashValue
 				realSize = Math.floor(cashValue / marketdata.close);
 
-				if (realSize <= 0) throw new Error('The desired "cashValue" is less than a share.');
+				if (realSize <= 0) throw new PublicError('The desired "cashValue" is less than a share.');
 			} else if (typeof size === 'number') {
 				// Otherwise we use the provided size
 				realSize = size;
@@ -226,16 +227,16 @@ export default class UserController extends BaseController {
 			price = marketdata.close;
 		} else {
 			// type === LIMIT
-			if (typeof bidPrice !== 'number') throw new Error('"bidPrice" is required for LIMIT operations');
-			if (bidPrice <= 0) throw new Error('"bidPrice" should be greater than 0');
+			if (typeof bidPrice !== 'number') throw new PublicError('"bidPrice" is required for LIMIT operations');
+			if (bidPrice <= 0) throw new PublicError('"bidPrice" should be greater than 0');
 
-			if (typeof size !== 'number') throw new Error('"size" is require for LIMIT operations');
+			if (typeof size !== 'number') throw new PublicError('"size" is required for LIMIT operations');
 
 			realSize = size;
 			price = bidPrice;
 		}
 
-		if (realSize <= 0) throw new Error('"size" should be greater than 0');
+		if (realSize <= 0) throw new PublicError('"size" should be greater than 0');
 
 		// Calculate the total order price
 		const totalPrice = price * realSize;
@@ -303,11 +304,11 @@ export default class UserController extends BaseController {
 
 	public async cancelUserOrder(orderId: number, userId: number) {
 		const [order] = await this.db.select().from(schema.orders).where(eq(schema.orders.id, orderId)).limit(1);
-		if (!order) throw new Error('order not found');
+		if (!order) throw new PublicError('order not found');
 
-		if (order.userid !== userId) throw new Error('order not found');
+		if (order.userid !== userId) throw new PublicError('order not found');
 
-		if (order.status !== 'NEW') throw new Error('Only "NEW" orders can be cancelled');
+		if (order.status !== 'NEW') throw new PublicError('Only "NEW" orders can be cancelled');
 
 		const [updatedOrder] = await this.db
 			.update(schema.orders)

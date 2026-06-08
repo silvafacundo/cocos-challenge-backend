@@ -5,6 +5,7 @@ import express, { type Express, type Request } from 'express';
 import InstrumentController from './controllers/InstrumentController';
 import UserController from './controllers/UserController';
 import * as schema from './db/schema';
+import { PublicError } from './errors/PublicError';
 
 export type DbTransaction = Parameters<Parameters<ReturnType<typeof drizzle>['transaction']>[0]>[0];
 
@@ -74,24 +75,24 @@ export default class Server {
 
 				const { type, side, ticker, size, bidPrice, cashValue } = req.body;
 
-				if (!['MARKET', 'LIMIT'].includes(type)) throw new Error('Invalid order type');
-				if (!['BUY', 'SELL'].includes(side)) throw new Error('Invalid order side');
+				if (!['MARKET', 'LIMIT'].includes(type)) throw new PublicError('Invalid order type');
+				if (!['BUY', 'SELL'].includes(side)) throw new PublicError('Invalid order side');
 
 				// Validate ticker
-				if (typeof ticker !== 'string') throw new Error('Missing ticker parameter');
+				if (typeof ticker !== 'string') throw new PublicError('Missing ticker parameter');
 				const [instrument] = await this.db
 					.select()
 					.from(schema.instruments)
 					.where(eq(schema.instruments.ticker, ticker))
 					.limit(1);
-				if (!instrument) throw new Error('Invalid ticker');
+				if (!instrument) throw new PublicError('Invalid ticker');
 
 				if (typeof size !== 'undefined' && typeof size !== 'number')
-					throw new Error('"size" should be a number');
+					throw new PublicError('"size" should be a number');
 				if (typeof bidPrice !== 'undefined' && typeof bidPrice !== 'number')
-					throw new Error('"bidPrice" should be a number');
+					throw new PublicError('"bidPrice" should be a number');
 				if (typeof cashValue !== 'undefined' && typeof cashValue !== 'number')
-					throw new Error('"cashValue" should be a number');
+					throw new PublicError('"cashValue" should be a number');
 
 				const order = await this.controllers.users.placeOrder(userId, instrument.id, type, side, {
 					size,
@@ -101,9 +102,7 @@ export default class Server {
 
 				return res.json({ ...order });
 			} catch (error) {
-				// Not the safest way to handle errors
-				console.error('Error creating order', error);
-				return res.status(400).json({ error: (error as Error).message });
+				return this.handleError(res, error, 'Error creating order');
 			}
 		});
 
@@ -115,9 +114,7 @@ export default class Server {
 
 				return res.json({ ...order });
 			} catch (error) {
-				// Not the safest way to handle errors
-				console.error('Error canceling order', error);
-				return res.status(400).json({ error: (error as Error).message });
+				return this.handleError(res, error, 'Error canceling order');
 			}
 		});
 	}
@@ -139,5 +136,13 @@ export default class Server {
 	public static getInstance() {
 		if (!Server.instance) return new Server();
 		return Server.instance;
+	}
+
+	private handleError(res: express.Response, error: unknown, contextMessage: string) {
+		if (error instanceof PublicError) {
+			return res.status(400).json({ error: error.message });
+		}
+		console.error(`${contextMessage}:`, error);
+		return res.status(500).json({ error: 'unexpected error' });
 	}
 }
