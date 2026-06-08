@@ -187,4 +187,247 @@ describe('Orders', async () => {
 			expect(body.validation.length).toBeGreaterThan(0);
 		});
 	});
+
+	describe('Cash Value Operations', async () => {
+		it('should calculate the size and deduct the correct trade value from balance for a MARKET BUY order using cashValue', async () => {
+			const startingBalance = Math.floor(ypfPrice * 10);
+			testUser = await userService.createTestUser(startingBalance);
+
+			const cashValue = ypfPrice * 2.5;
+			const order = await orderService.placeOrder(
+				testUser.id,
+				ypfInstrument.id,
+				OrderType.MARKET,
+				OrderSide.BUY,
+				{ cashValue }
+			);
+
+			expect(order.status).toBe('FILLED');
+			expect(order.size).toBe(2);
+
+			const userBalance = await userService.getUserCashBalance(testUser.id);
+			expect(userBalance).toBe(startingBalance - ypfPrice * 2);
+
+			await userService.deleteUser(testUser.id);
+		});
+
+		it('should calculate the size and increase the balance for a MARKET SELL order using cashValue', async () => {
+			testUser = await userService.createTestUser(0, [{ instrumentId: ypfInstrument.id, size: 5 }]);
+
+			const cashValue = ypfPrice * 2;
+			const order = await orderService.placeOrder(
+				testUser.id,
+				ypfInstrument.id,
+				OrderType.MARKET,
+				OrderSide.SELL,
+				{ cashValue }
+			);
+
+			expect(order.status).toBe('FILLED');
+			expect(order.size).toBe(2);
+
+			const userBalance = await userService.getUserCashBalance(testUser.id);
+			expect(userBalance).toBe(ypfPrice * 2);
+
+			const portfolio = await userService.getUserPortfolio(testUser.id);
+			const ypfAsset = portfolio.assets.find(a => a.ticker === 'YPFD');
+			expect(ypfAsset).toBeDefined();
+			expect(ypfAsset!.size).toBe(3);
+
+			await userService.deleteUser(testUser.id);
+		});
+
+		it('should reject a MARKET BUY order using cashValue if the user has insufficient balance', async () => {
+			const startingBalance = Math.floor(ypfPrice * 1.5);
+			testUser = await userService.createTestUser(startingBalance);
+
+			const cashValue = ypfPrice * 2;
+			const order = await orderService.placeOrder(
+				testUser.id,
+				ypfInstrument.id,
+				OrderType.MARKET,
+				OrderSide.BUY,
+				{ cashValue }
+			);
+
+			expect(order.status).toBe('REJECTED');
+
+			const userBalance = await userService.getUserCashBalance(testUser.id);
+			expect(userBalance).toBe(startingBalance);
+
+			await userService.deleteUser(testUser.id);
+		});
+
+		it('should throw an error if the cashValue is less than the price of a single share', async () => {
+			testUser = await userService.createTestUser(Math.floor(ypfPrice * 10));
+
+			const cashValue = ypfPrice - 1;
+
+			await expect(
+				orderService.placeOrder(
+					testUser.id,
+					ypfInstrument.id,
+					OrderType.MARKET,
+					OrderSide.BUY,
+					{ cashValue }
+				)
+			).rejects.toThrow('The desired "cashValue" is less than a share.');
+
+			await userService.deleteUser(testUser.id);
+		});
+
+		it('should throw an error if the cashValue is less than or equal to 0', async () => {
+			testUser = await userService.createTestUser(Math.floor(ypfPrice * 10));
+
+			await expect(
+				orderService.placeOrder(
+					testUser.id,
+					ypfInstrument.id,
+					OrderType.MARKET,
+					OrderSide.BUY,
+					{ cashValue: 0 }
+				)
+			).rejects.toThrow('"cashValue" should be greater than 0');
+
+			await expect(
+				orderService.placeOrder(
+					testUser.id,
+					ypfInstrument.id,
+					OrderType.MARKET,
+					OrderSide.BUY,
+					{ cashValue: -100 }
+				)
+			).rejects.toThrow('"cashValue" should be greater than 0');
+
+			await userService.deleteUser(testUser.id);
+		});
+	});
+
+	describe('Service-Level Parameter Validations', async () => {
+		it('should throw an error for MARKET operation if neither size nor cashValue is specified', async () => {
+			testUser = await userService.createTestUser(Math.floor(ypfPrice * 10));
+
+			await expect(
+				orderService.placeOrder(
+					testUser.id,
+					ypfInstrument.id,
+					OrderType.MARKET,
+					OrderSide.BUY,
+					{}
+				)
+			).rejects.toThrow('for MARKET operations "size" or "cashValue" are required');
+
+			await userService.deleteUser(testUser.id);
+		});
+
+		it('should throw an error for MARKET operation if size is <= 0', async () => {
+			testUser = await userService.createTestUser(Math.floor(ypfPrice * 10));
+
+			await expect(
+				orderService.placeOrder(
+					testUser.id,
+					ypfInstrument.id,
+					OrderType.MARKET,
+					OrderSide.BUY,
+					{ size: 0 }
+				)
+			).rejects.toThrow('"size" should be greater than 0');
+
+			await expect(
+				orderService.placeOrder(
+					testUser.id,
+					ypfInstrument.id,
+					OrderType.MARKET,
+					OrderSide.BUY,
+					{ size: -5 }
+				)
+			).rejects.toThrow('"size" should be greater than 0');
+
+			await userService.deleteUser(testUser.id);
+		});
+
+		it('should throw an error for LIMIT operation if bidPrice is missing', async () => {
+			testUser = await userService.createTestUser(Math.floor(ypfPrice * 10));
+
+			await expect(
+				orderService.placeOrder(
+					testUser.id,
+					ypfInstrument.id,
+					OrderType.LIMIT,
+					OrderSide.BUY,
+					{ size: 2 }
+				)
+			).rejects.toThrow('"bidPrice" is required for LIMIT operations');
+
+			await userService.deleteUser(testUser.id);
+		});
+
+		it('should throw an error for LIMIT operation if bidPrice is <= 0', async () => {
+			testUser = await userService.createTestUser(Math.floor(ypfPrice * 10));
+
+			await expect(
+				orderService.placeOrder(
+					testUser.id,
+					ypfInstrument.id,
+					OrderType.LIMIT,
+					OrderSide.BUY,
+					{ size: 2, bidPrice: 0 }
+				)
+			).rejects.toThrow('"bidPrice" should be greater than 0');
+
+			await expect(
+				orderService.placeOrder(
+					testUser.id,
+					ypfInstrument.id,
+					OrderType.LIMIT,
+					OrderSide.BUY,
+					{ size: 2, bidPrice: -100 }
+				)
+			).rejects.toThrow('"bidPrice" should be greater than 0');
+
+			await userService.deleteUser(testUser.id);
+		});
+
+		it('should throw an error for LIMIT operation if size is missing', async () => {
+			testUser = await userService.createTestUser(Math.floor(ypfPrice * 10));
+
+			await expect(
+				orderService.placeOrder(
+					testUser.id,
+					ypfInstrument.id,
+					OrderType.LIMIT,
+					OrderSide.BUY,
+					{ bidPrice: 500 }
+				)
+			).rejects.toThrow('"size" is required for LIMIT operations');
+
+			await userService.deleteUser(testUser.id);
+		});
+
+		it('should throw an error for LIMIT operation if size is <= 0', async () => {
+			testUser = await userService.createTestUser(Math.floor(ypfPrice * 10));
+
+			await expect(
+				orderService.placeOrder(
+					testUser.id,
+					ypfInstrument.id,
+					OrderType.LIMIT,
+					OrderSide.BUY,
+					{ size: 0, bidPrice: 500 }
+				)
+			).rejects.toThrow('"size" should be greater than 0');
+
+			await expect(
+				orderService.placeOrder(
+					testUser.id,
+					ypfInstrument.id,
+					OrderType.LIMIT,
+					OrderSide.BUY,
+					{ size: -2, bidPrice: 500 }
+				)
+			).rejects.toThrow('"size" should be greater than 0');
+
+			await userService.deleteUser(testUser.id);
+		});
+	});
 });
