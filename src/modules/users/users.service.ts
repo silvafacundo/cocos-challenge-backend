@@ -23,6 +23,40 @@ export interface Portfolio {
 }
 
 export default class UserService extends BaseComponent {
+	public async getUserStockSize(
+		userId: number,
+		instrumentId: number,
+		trx?: DbTransaction | ReturnType<typeof drizzle>
+	): Promise<number> {
+		if (!trx) trx = this.db;
+
+		const [stockSize] = await trx
+			.select({
+				size: sum(
+					sql`
+						case
+							when ${schema.orders.side} = 'BUY' then ${schema.orders.size}
+							when ${schema.orders.side} = 'SELL' then -${schema.orders.size}
+							else 0
+						END
+					`
+				)
+			})
+			.from(schema.orders)
+			.where(
+				and(
+					eq(schema.orders.userid, userId),
+					eq(schema.orders.instrumentid, instrumentId),
+					eq(schema.orders.status, 'FILLED')
+				)
+			)
+			.limit(1);
+
+		if (!stockSize?.size) return 0;
+
+		return parseInt(stockSize?.size, 10);
+	}
+
 	public async getUserCashBalance(userId: number, trx?: DbTransaction | ReturnType<typeof drizzle>): Promise<number> {
 		if (!trx) trx = this.db;
 
@@ -34,7 +68,7 @@ export default class UserService extends BaseComponent {
 		 * For BUY and CASH_OUT operations status -> FILLED, NEW (That money shouldn't be available)
 		 * For SELL and CASH_IN status -> FILLED
 		 */
-		const query = trx
+		const [balance] = await trx
 			.select({
 				balance: sum(
 					sql`
@@ -65,9 +99,6 @@ export default class UserService extends BaseComponent {
 			)
 			.limit(1);
 
-		const [balance] = await query;
-
-		// Maybe throw an error? Should we verify user existance?
 		if (!balance?.balance) return 0;
 
 		return parseFloat(balance.balance);

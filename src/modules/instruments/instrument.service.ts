@@ -96,4 +96,27 @@ export default class InstrumentService extends BaseComponent {
 			daily_return: parseFloat((instrument.daily_return as string | null) ?? '0')
 		}));
 	}
+
+	public async getInstrumentById(instrumentId: number) {
+		const marketdata = this.latestMarketdataQuery([instrumentId]);
+
+		const [instrument] = await this.db
+			.select({
+				id: schema.instruments.id,
+				ticker: schema.instruments.ticker,
+				name: schema.instruments.name,
+				type: schema.instruments.type,
+				low: marketdata.low,
+				high: marketdata.high,
+				open: marketdata.open,
+				close: marketdata.close,
+				previousClouse: marketdata.previousClose
+			})
+			.from(schema.instruments)
+			.innerJoin(marketdata, eq(schema.instruments.id, marketdata.instrumentId))
+			.where(eq(schema.instruments.id, instrumentId))
+			.limit(1);
+
+		return instrument;
+	}
 }

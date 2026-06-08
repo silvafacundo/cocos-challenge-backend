@@ -1,4 +1,4 @@
-import { and, eq, sql, sum } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import * as schema from '../../db/schema';
 import { PublicError } from '../../errors/PublicError';
 import BaseComponent from '../../structures/BaseComponent';
@@ -13,32 +13,27 @@ export default class OrderService extends BaseComponent {
 		{ size, bidPrice, cashValue }: PlaceOrderParams
 	) {
 		let price: number;
-		let realSize: number;
+		let realSize: number = 0;
 
+		// Preparation and validations
 		if (type === OrderType.MARKET) {
 			// Fetch marketdata price
-			const [marketdata] = await this.db
-				.select()
-				.from(this.services.instruments.latestMarketdataQuery([instrumentId]));
-			if (!marketdata) throw new PublicError('Instrument not found');
-			if (!marketdata.close) throw new PublicError('Invalid instrument');
+			const marketdata = await this.services.instruments.getInstrumentById(instrumentId);
+			if (!marketdata?.close) throw new PublicError('Instrument not found');
 
-			// Calculate the operation size
-			if (typeof size === 'undefined' && typeof cashValue === 'undefined') {
+			// Size or cash value is required
+			if (typeof size === 'undefined' && typeof cashValue === 'undefined')
 				throw new PublicError('for MARKET operations "size" or "cashValue" are required');
-			} else if (typeof size === 'undefined' && typeof cashValue === 'number') {
+
+			// If size was provided cashValue will be ignored
+			if (typeof size === 'number') {
+				realSize = size;
+			} else if (typeof cashValue === 'number') {
 				// If cashValue is provided then we calculate the amount of shares by dividing by the current price
 				if (cashValue <= 0) throw new PublicError('"cashValue" should be greater than 0');
-
 				// Calculate operation size by the cashValue
 				realSize = Math.floor(cashValue / marketdata.close);
-
 				if (realSize <= 0) throw new PublicError('The desired "cashValue" is less than a share.');
-			} else if (typeof size === 'number') {
-				// Otherwise we use the provided size
-				realSize = size;
-			} else {
-				throw new Error('Unexpected error');
 			}
 
 			price = marketdata.close;
@@ -71,30 +66,10 @@ export default class OrderService extends BaseComponent {
 				const balance = await this.services.users.getUserCashBalance(userId, trx);
 				hasAvailable = balance >= totalPrice;
 			} else {
-				// IF size === 'SELL'
+				// IF side === 'SELL'
 				// Check if has the required stocks available for the operation
-				const orders = await trx
-					.select({
-						size: sum(
-							sql`
-								case when ${schema.orders.side} = 'BUY' then ${schema.orders.size}
-								when ${schema.orders.side} = 'SELL' then -${schema.orders.size}
-								else 0
-								END
-							`
-						)
-					})
-					.from(schema.orders)
-					.where(
-						and(
-							eq(schema.orders.userid, userId),
-							eq(schema.orders.instrumentid, instrumentId),
-							eq(schema.orders.status, 'FILLED')
-						)
-					)
-					.limit(1);
-
-				hasAvailable = parseInt(orders[0]?.size ?? '0', 10) >= realSize;
+				const stocks = await this.services.users.getUserStockSize(userId, instrumentId, trx);
+				hasAvailable = stocks >= realSize;
 			}
 
 			let status: 'FILLED' | 'REJECTED' | 'NEW' = type === OrderType.MARKET ? 'FILLED' : 'NEW';

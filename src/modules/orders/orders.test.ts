@@ -264,13 +264,7 @@ describe('Orders', async () => {
 			const cashValue = ypfPrice - 1;
 
 			await expect(
-				orderService.placeOrder(
-					testUser.id,
-					ypfInstrument.id,
-					OrderType.MARKET,
-					OrderSide.BUY,
-					{ cashValue }
-				)
+				orderService.placeOrder(testUser.id, ypfInstrument.id, OrderType.MARKET, OrderSide.BUY, { cashValue })
 			).rejects.toThrow('The desired "cashValue" is less than a share.');
 
 			await userService.deleteUser(testUser.id);
@@ -280,23 +274,15 @@ describe('Orders', async () => {
 			testUser = await userService.createTestUser(Math.floor(ypfPrice * 10));
 
 			await expect(
-				orderService.placeOrder(
-					testUser.id,
-					ypfInstrument.id,
-					OrderType.MARKET,
-					OrderSide.BUY,
-					{ cashValue: 0 }
-				)
+				orderService.placeOrder(testUser.id, ypfInstrument.id, OrderType.MARKET, OrderSide.BUY, {
+					cashValue: 0
+				})
 			).rejects.toThrow('"cashValue" should be greater than 0');
 
 			await expect(
-				orderService.placeOrder(
-					testUser.id,
-					ypfInstrument.id,
-					OrderType.MARKET,
-					OrderSide.BUY,
-					{ cashValue: -100 }
-				)
+				orderService.placeOrder(testUser.id, ypfInstrument.id, OrderType.MARKET, OrderSide.BUY, {
+					cashValue: -100
+				})
 			).rejects.toThrow('"cashValue" should be greater than 0');
 
 			await userService.deleteUser(testUser.id);
@@ -308,13 +294,7 @@ describe('Orders', async () => {
 			testUser = await userService.createTestUser(Math.floor(ypfPrice * 10));
 
 			await expect(
-				orderService.placeOrder(
-					testUser.id,
-					ypfInstrument.id,
-					OrderType.MARKET,
-					OrderSide.BUY,
-					{}
-				)
+				orderService.placeOrder(testUser.id, ypfInstrument.id, OrderType.MARKET, OrderSide.BUY, {})
 			).rejects.toThrow('for MARKET operations "size" or "cashValue" are required');
 
 			await userService.deleteUser(testUser.id);
@@ -324,23 +304,11 @@ describe('Orders', async () => {
 			testUser = await userService.createTestUser(Math.floor(ypfPrice * 10));
 
 			await expect(
-				orderService.placeOrder(
-					testUser.id,
-					ypfInstrument.id,
-					OrderType.MARKET,
-					OrderSide.BUY,
-					{ size: 0 }
-				)
+				orderService.placeOrder(testUser.id, ypfInstrument.id, OrderType.MARKET, OrderSide.BUY, { size: 0 })
 			).rejects.toThrow('"size" should be greater than 0');
 
 			await expect(
-				orderService.placeOrder(
-					testUser.id,
-					ypfInstrument.id,
-					OrderType.MARKET,
-					OrderSide.BUY,
-					{ size: -5 }
-				)
+				orderService.placeOrder(testUser.id, ypfInstrument.id, OrderType.MARKET, OrderSide.BUY, { size: -5 })
 			).rejects.toThrow('"size" should be greater than 0');
 
 			await userService.deleteUser(testUser.id);
@@ -350,13 +318,7 @@ describe('Orders', async () => {
 			testUser = await userService.createTestUser(Math.floor(ypfPrice * 10));
 
 			await expect(
-				orderService.placeOrder(
-					testUser.id,
-					ypfInstrument.id,
-					OrderType.LIMIT,
-					OrderSide.BUY,
-					{ size: 2 }
-				)
+				orderService.placeOrder(testUser.id, ypfInstrument.id, OrderType.LIMIT, OrderSide.BUY, { size: 2 })
 			).rejects.toThrow('"bidPrice" is required for LIMIT operations');
 
 			await userService.deleteUser(testUser.id);
@@ -366,23 +328,17 @@ describe('Orders', async () => {
 			testUser = await userService.createTestUser(Math.floor(ypfPrice * 10));
 
 			await expect(
-				orderService.placeOrder(
-					testUser.id,
-					ypfInstrument.id,
-					OrderType.LIMIT,
-					OrderSide.BUY,
-					{ size: 2, bidPrice: 0 }
-				)
+				orderService.placeOrder(testUser.id, ypfInstrument.id, OrderType.LIMIT, OrderSide.BUY, {
+					size: 2,
+					bidPrice: 0
+				})
 			).rejects.toThrow('"bidPrice" should be greater than 0');
 
 			await expect(
-				orderService.placeOrder(
-					testUser.id,
-					ypfInstrument.id,
-					OrderType.LIMIT,
-					OrderSide.BUY,
-					{ size: 2, bidPrice: -100 }
-				)
+				orderService.placeOrder(testUser.id, ypfInstrument.id, OrderType.LIMIT, OrderSide.BUY, {
+					size: 2,
+					bidPrice: -100
+				})
 			).rejects.toThrow('"bidPrice" should be greater than 0');
 
 			await userService.deleteUser(testUser.id);
@@ -392,13 +348,9 @@ describe('Orders', async () => {
 			testUser = await userService.createTestUser(Math.floor(ypfPrice * 10));
 
 			await expect(
-				orderService.placeOrder(
-					testUser.id,
-					ypfInstrument.id,
-					OrderType.LIMIT,
-					OrderSide.BUY,
-					{ bidPrice: 500 }
-				)
+				orderService.placeOrder(testUser.id, ypfInstrument.id, OrderType.LIMIT, OrderSide.BUY, {
+					bidPrice: 500
+				})
 			).rejects.toThrow('"size" is required for LIMIT operations');
 
 			await userService.deleteUser(testUser.id);
@@ -408,23 +360,17 @@ describe('Orders', async () => {
 			testUser = await userService.createTestUser(Math.floor(ypfPrice * 10));
 
 			await expect(
-				orderService.placeOrder(
-					testUser.id,
-					ypfInstrument.id,
-					OrderType.LIMIT,
-					OrderSide.BUY,
-					{ size: 0, bidPrice: 500 }
-				)
+				orderService.placeOrder(testUser.id, ypfInstrument.id, OrderType.LIMIT, OrderSide.BUY, {
+					size: 0,
+					bidPrice: 500
+				})
 			).rejects.toThrow('"size" should be greater than 0');
 
 			await expect(
-				orderService.placeOrder(
-					testUser.id,
-					ypfInstrument.id,
-					OrderType.LIMIT,
-					OrderSide.BUY,
-					{ size: -2, bidPrice: 500 }
-				)
+				orderService.placeOrder(testUser.id, ypfInstrument.id, OrderType.LIMIT, OrderSide.BUY, {
+					size: -2,
+					bidPrice: 500
+				})
 			).rejects.toThrow('"size" should be greater than 0');
 
 			await userService.deleteUser(testUser.id);
