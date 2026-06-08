@@ -50,7 +50,7 @@ Para levantar el proyecto completo de forma automática con Docker Compose:
    ```bash
    docker compose up --build -d
    ```
-   *Esto compilará la aplicación, creará e iniciará los contenedores de la base de datos y de la aplicación, ejecutará las migraciones y los datos de prueba de forma automática. La aplicación quedará disponible en http://localhost:3000.*
+   *Esto creará e iniciará los contenedores de la base de datos y de la aplicación, ejecutará las migraciones y los datos de prueba de forma automática. La aplicación quedará disponible en http://localhost:3000.*
 
 ---
 
@@ -108,6 +108,7 @@ Este endpoint devuelve el portfolio del usuario seleccionado.
 | `absolute_return` | `number` | Ganancia o pérdida monetaria neta absoluta acumulada en este activo. |
 | `roi` | `number` | Retorno sobre la inversión expresado en porcentaje (`%`). |
 
+> [!NOTE]
 > A la hora de calcular el balance del usuario, se asume que las operaciones de tipo CASH_IN y CASH_OUT son únicamente para pesos. De no ser así, se debe modificar la query que realiza el cálculo.
 
 ---
@@ -157,6 +158,7 @@ Permite registrar una nueva orden de compra o venta (de tipo MARKET o LIMIT) par
 | `bidPrice` | `number` | Condicional | Precio límite por cada unidad (requerido únicamente para órdenes `LIMIT`). |
 | `cashValue` | `number` | Condicional | Monto total en pesos a operar (opcional para `MARKET`). |
 
+> [!NOTE]
 > Si se utiliza `cashValue`, la cantidad de acciones a comprar será aproximada. No se ejecutará el total de `cashValue`.
 
 **Response (Objeto de orden creada):**
